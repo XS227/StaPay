@@ -15,6 +15,18 @@ enum OrderStatus {
   CANCELLED
 }
 
+enum ProductType {
+  ONE_TIME
+  SUBSCRIPTION
+}
+
+enum SubscriptionStatus {
+  PENDING
+  ACTIVE
+  STOPPED
+  EXPIRED
+}
+
 model Tenant {
   id                String    @id @default(uuid())
   slug              String    @unique
@@ -24,23 +36,30 @@ model Tenant {
   vippsClientId     String?
   vippsClientSecret String?
   vippsSubKey       String?
+  enableRecurring   Boolean   @default(false)
+  enableCheckout    Boolean   @default(false)
+  enableLoyalty     Boolean   @default(false)
   createdAt         DateTime  @default(now())
   updatedAt         DateTime  @updatedAt
   products          Product[]
   orders            Order[]
+  subscriptions     Subscription[]
+  customers         Customer[]
 }
 
 model Product {
-  id          String   @id @default(uuid())
+  id          String      @id @default(uuid())
   tenantId    String
-  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenant      Tenant      @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   title       String
   description String
   price       Int
   imageUrl    String?
-  stock       Int      @default(0)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  stock       Int         @default(0)
+  type        ProductType @default(ONE_TIME)
+  interval    String?
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
 
   @@index([tenantId])
 }
@@ -58,4 +77,34 @@ model Order {
 
   @@index([tenantId])
   @@index([vippsOrderId])
+}
+
+model Customer {
+  id            String         @id @default(uuid())
+  tenantId      String
+  tenant        Tenant         @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  vippsSub      String         @unique
+  email         String
+  phone         String
+  name          String
+  loyaltyPoints Int            @default(0)
+  createdAt     DateTime       @default(now())
+  subscriptions Subscription[]
+
+  @@index([tenantId])
+}
+
+model Subscription {
+  id               String             @id @default(uuid())
+  tenantId         String
+  tenant           Tenant             @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  customerId       String
+  customer         Customer           @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  vippsAgreementId String             @unique
+  status           SubscriptionStatus @default(PENDING)
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt
+
+  @@index([tenantId])
+  @@index([customerId])
 }
