@@ -1,0 +1,65 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum OrderStatus {
+  PENDING
+  PAID
+  FAILED
+}
+
+model Tenant {
+  id                 String    @id @default(cuid())
+  companyName        String    @map("company_name")
+  email              String    @db.VarChar(320)
+  vippsClientId      String?   @map("vipps_client_id")
+  vippsSecret        String?   @map("vipps_secret")
+  vippsSubscriptionKey String? @map("vipps_subscription_key")
+  domain             String    @unique
+  createdAt          DateTime  @default(now()) @map("created_at")
+
+  products           Product[]
+  orders             Order[]
+
+  @@map("tenants")
+}
+
+model Product {
+  id          String   @id @default(cuid())
+  tenantId    String   @map("tenant_id")
+  title       String
+  description String?
+  price       Decimal  @db.Decimal(12, 2)
+  currency    String   @default("NOK") @db.VarChar(3)
+  stock       Int      @default(0)
+  images      String[] @default([])
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@map("products")
+}
+
+model Order {
+  id            String      @id @default(cuid())
+  tenantId      String      @map("tenant_id")
+  vippsOrderId  String?     @map("vipps_order_id")
+  customerInfo  Json?       @map("customer_info")
+  totalAmount   Int         @map("total_amount")
+  status        OrderStatus @default(PENDING)
+  createdAt     DateTime    @default(now()) @map("created_at")
+  updatedAt     DateTime    @updatedAt @map("updated_at")
+
+  tenant        Tenant      @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@index([vippsOrderId])
+  @@map("orders")
+}
