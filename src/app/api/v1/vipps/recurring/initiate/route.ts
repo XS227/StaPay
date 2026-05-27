@@ -13,6 +13,11 @@ type VippsTokenResponse = {
   expires_in: number;
 };
 
+type VippsAgreementResponse = {
+  id?: string;
+  redirectUrl?: string;
+};
+
 type CachedToken = {
   token: string;
   expiresAt: number;
@@ -117,7 +122,7 @@ export async function POST(req: NextRequest) {
       cache: "no-store",
     });
 
-    const data = await vippsResponse.json();
+    const data: VippsAgreementResponse = await vippsResponse.json();
     if (!vippsResponse.ok) {
       return NextResponse.json({ error: "Failed to initiate recurring agreement", details: data }, { status: vippsResponse.status });
     }
