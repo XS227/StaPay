@@ -10,7 +10,11 @@ async function toggleFeature(formData: FormData) {
   const nextValue = String(formData.get("nextValue") ?? "false") === "true";
 
   const allowed = ["enableRecurring", "enableCheckout", "enableLoyalty"] as const;
-  if (!tenantId || !allowed.includes(feature as (typeof allowed)[number])) {
+  type AllowedFeature = (typeof allowed)[number];
+  const isAllowedFeature = (value: string): value is AllowedFeature =>
+    allowed.includes(value as AllowedFeature);
+
+  if (!tenantId || !isAllowedFeature(feature)) {
     throw new Error("Invalid toggle payload");
   }
 

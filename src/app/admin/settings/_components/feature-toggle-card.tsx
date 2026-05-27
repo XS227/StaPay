@@ -36,7 +36,7 @@ export function FeatureToggleCard(props: ToggleCardProps) {
                 <p className="text-sm text-zinc-500">{feature.description}</p>
               </div>
               <form
-                action={(formData) => startTransition(() => props.onToggle(formData))}
+                action={(formData: FormData) => startTransition(() => props.onToggle(formData))}
                 className="flex items-center gap-2"
               >
                 <input type="hidden" name="tenantId" value={props.tenantId} />
